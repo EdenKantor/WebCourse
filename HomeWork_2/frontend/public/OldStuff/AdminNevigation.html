@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Navigation Page</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+</head>
+
+
+
+<body class="bg-white text-black transition-all duration-300 dark:bg-gray-900 dark:text-white">
+
+   <!-- Top Bar -->
+   <div class="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
+    <!-- Back Button -->
+    <a href="Login.html" class="text-lg text-green-500 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 flex items-center space-x-2">
+      <i class="fas fa-arrow-left"></i>
+      <span>Back</span>
+    </a>
+
+    <!-- Theme Change Button -->
+    <button id="toggle-theme" class="px-4 py-2 bg-green-400 text-white rounded-lg hover:bg-green-500 dark:bg-green-600 dark:hover:bg-green-500">
+      <i class="fas fa-paint-brush mr-2"></i>Toggle Theme
+    </button>
+  </div>
+
+
+  <!-- Main Content -->
+  <div class="flex flex-col items-center min-h-screen space-y-12 p-6">
+    <!-- Title -->
+    <h1 id="main-title" class="text-4xl font-extrabold text-center dark:text-white mb-12">Admin Navigation Page</h1>
+    
+    <!-- Action Buttons -->
+    <div class="flex flex-col space-y-6 w-full max-w-sm">
+        <a href="HomePage.html">
+          <button class="w-full px-10 py-6 bg-green-400 text-white rounded-lg hover:bg-green-500 text-2xl flex justify-center items-center">
+            <span>To Home Page</span>
+          </button>
+        </a>
+        <a>
+          <button class="w-full px-10 py-6 bg-green-400 text-white rounded-lg hover:bg-green-500 text-2xl flex justify-center items-center">
+            <span>Pending User Approval (TBD)</span>
+          </button>
+        </a>
+        <a>
+          <button class="w-full px-10 py-6 bg-green-400 text-white rounded-lg hover:bg-green-500 text-2xl flex justify-center items-center">
+            <span>Search/Edit Workout data (TBD)</span>
+          </button>
+        </a>
+
+        <a>
+          <button class="w-full px-10 py-6 bg-green-400 text-white rounded-lg hover:bg-green-500 text-2xl flex justify-center items-center">
+            <span>Search/Edit active users (TBD)</span>
+          </button>
+        </a>
+    </div>
+  </div>
+  
+
+  <!-- Link the external JavaScript file -->
+  <script src="AdminNavigationLogic.js"></script>
+  
+</body>
+</html>
