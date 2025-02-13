@@ -1,12 +1,15 @@
 import {getUserByUsername } from '../../lib/UsersDB';
 
+/**
+ * Receives the user's request and processes it based on the preferred method.
+ */
 export default async function handler(req, res) {
     setCorsHeaders(res);
 
     if (req.method === 'OPTIONS') {
       return res.status(200).end();
     }
-
+    //handle GET request
     if (!isGetMethod(req)) {
         return res.status(405).json({ message: 'Method not allowed' });
     }
@@ -17,7 +20,6 @@ export default async function handler(req, res) {
       }
 
       try {
-        // Connect to the database and retrieve the user
         const user = await getUserByUsername(username);
         if (!user) {
           return res.status(404).json({ message: 'User not found' });
@@ -41,12 +43,15 @@ function isGetMethod(req) {
     return req.method === 'GET';
 }
 
-
+/**
+ * Authenticates a user based on the provided username and password.
+ * Gets user object and password.
+ * Returns the user object if the password is valid, or an error message if not.
+ */
 async function handleUserAuthentication(user, password, res) {  
 
     const isPasswordValid = password === user.password;
     if ( isPasswordValid) {
-        // Admin with a valid password - gets all data can edit 
         return res.status(200).json({user});
 
     } else {

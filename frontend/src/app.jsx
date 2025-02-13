@@ -12,9 +12,10 @@ import Discover1Page from './layouts/Discover1Page';
 import Discover2Page from './layouts/Discover2Page';
 import InfoPage from './layouts/InfoPage';
 import ContinueRoutine from './layouts/ContinueRoutine';
-import AdminNavigation from './layouts/AdminNavigation';
 import PendingUsers from './layouts/PendingUsers';
 import ManageUsers from './layouts/ManageUsers';
+import NotSoFast from './layouts/NotSoFast';
+
 
 
 function App() {
@@ -42,9 +43,9 @@ function App() {
             <Route path="/discover2" component={Discover2Page} />
             <Route path="/my-info" component={InfoPage} />
             <Route path="/routine" component={ContinueRoutine} />
-            <Route path="/AdminNavigation" component={AdminNavigation } />
             <Route path="/PendingUsers" component={PendingUsers} />
             <Route path="/ManageUsers" component = {ManageUsers} />
+            <Route path="/NotSoFast" component = {NotSoFast} />
           </Switch>
         </CSSTransition>
       </TransitionGroup>

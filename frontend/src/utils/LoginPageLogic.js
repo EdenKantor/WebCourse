@@ -1,65 +1,101 @@
 import { useState } from "preact/hooks";
+import { saveToSessionStorage } from "../utils/LocalSessionHelper"; 
 
-export const useLoginLogic = () => {
-  // States for username, password, visibility, and messages
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
-  const [message, setMessage] = useState("");
+export const useLoginLogic = (navigate) => {
+  // States for user inputs and feedback
+  const [username, setUsername] = useState(""); // Username input
+  const [password, setPassword] = useState(""); // Password input
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false); // Toggle visibility of password field
+  const [message, setMessage] = useState(""); // Feedback message for the user
+  
+  // State for loading spinner
+  const [loading, setLoading] = useState(false); 
+ 
+  /**
+   * Sanitizes the input by removing spaces and limiting the length.
+   * @param {string} value - Input value to sanitize.
+   * @returns {string} Sanitized input.
+   */
+ const sanitizeInput = (value) => value.replace(/\s/g, "").slice(0);
 
-  // Toggle password visibility
+  /**
+   * Toggles the visibility of the password field.
+   */
   const togglePasswordVisibility = () => {
     setIsPasswordVisible((prev) => !prev);
   };
 
- // Handle login validation
- const handleLogin = async (navigate) => {
-  return new Promise(async (resolve, reject) => {
-    // Check for missing username or password
+   // Handle Login Button Click
+   const handleLoginClick = async () => {
+    setLoading(true); // Start loading spinner
+    try {
+      await handleLogin(); // Wait for login process to complete
+    } catch (error) {
+      console.error('Login error:', error); // Log unexpected errors
+    } finally {
+      setLoading(false); // Stop spinner after login process 
+    }
+  };
+
+  /**
+   * Handles login logic, including validation, API request, and navigation.
+   */
+  const handleLogin = async () => {
+    // Validate that both username and password are provided
     if (!username || !password) {
       setMessage("Please enter both username and password.");
-      resolve();
       return;
     }
 
-    const url = `http://localhost:3000/api/login?username=${username}&password=${password}`;
+    const url = `https://web-fit-pro-back-rose.vercel.app/api/login?username=${username}&password=${password}`;
 
     try {
-      const response = await fetch(url, { method: 'GET' });
+      // Send GET request to the login endpoint
+      const response = await fetch(url, { method: "GET" });
 
+      // Handle successful login
       if (response.status === 200) {
         const data = await response.json();
-
-        // Redirect based on the role of the user
-        if (data.user.isAdmin === 'Y') {
-          navigate('/AdminNavigation');
+        const { isRegistered } = data.user;
+        // Save userData with the username input to sessionStorage
+      const signedUserData = {
+        userName: username,
+      };
+      saveToSessionStorage("signedUserData", signedUserData); // Save to sessionStorage
+      console.log("login Data Saved in SessionStorage: ", signedUserData); // Debugging log
+        // Navigate based on user's registration status
+        if (isRegistered === "N") {
+          navigate("/NotSoFast");
         } else {
-          navigate('/user-home');
+          navigate("/user-home");
         }
-        resolve();
-      } else if (response.status === 401 || response.status === 404) {
+      }
+      // Handle incorrect credentials or user not found
+      else if (response.status === 401 || response.status === 404) {
         setMessage("Incorrect username or password. Please try again.");
-        resolve();
-      } else {
+      }
+      // Handle unexpected server errors
+      else {
         setMessage("An unexpected error occurred. Please try again later.");
-        resolve();
       }
     } catch (error) {
-      console.error('Error:', error);
-      setMessage("An error occurred while trying to sign in. Please check your network connection and try again.");
-      resolve();
+      // Handle network or request errors
+      console.error("Error:", error);
+      setMessage(
+        "An error occurred while trying to sign in. Please check your network connection and try again."
+      );
     }
-  });
   };
 
   return {
-    username,
-    setUsername,
-    password,
-    setPassword,
-    isPasswordVisible,
-    togglePasswordVisibility,
-    message,
-    handleLogin,
+    username, // Current username
+    setUsername: (value) => setUsername(sanitizeInput(value)), // Sanitized username setter
+    password, // Current password
+    setPassword: (value) => setPassword(sanitizeInput(value)), // Sanitized password setter
+    isPasswordVisible, // Password visibility state
+    togglePasswordVisibility, // Function to toggle password visibility
+    message, // Feedback message for the user
+    handleLoginClick, // Login function
+    loading, // loading
   };
 };

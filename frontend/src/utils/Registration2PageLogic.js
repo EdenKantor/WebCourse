@@ -1,34 +1,45 @@
 import { useState } from "preact/hooks";
+import { getFromSessionStorage, saveToSessionStorage, clearSessionStorage } from "../utils/LocalSessionHelper";
 
-// API URL
-const url = "http://localhost:3000/api/register";
+// API URL for registration requests
+const url = "https://web-fit-pro-back-rose.vercel.app/api/register";
 
-export const useRegistration2Logic = () => {
-  // States
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
+export const useRegistration2Logic = (navigate) => {
+  // Form input states
+  const [username, setUsername] = useState(""); // Stores the entered username
+  const [password, setPassword] = useState(""); // Stores the entered password
+  const [confirmPassword, setConfirmPassword] = useState(""); // Stores the re-entered password for confirmation
+  const [errorMessage, setErrorMessage] = useState(""); // Holds any validation or API error messages
 
-  // Visibility states for password inputs
-  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
-  const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] = useState(false);
+  // States to control visibility of password fields
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false); // Visibility toggle for password field
+  const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] = useState(false); // Visibility toggle for confirm password field
 
-  // Popup states
-  const [isOpen, setIsOpen] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [isError, setIsError] = useState(false); // NEW - Error popup flag
+  // Popup state management
+  const [isOpen, setIsOpen] = useState(false); // Controls the visibility of the popup
+  const [showSuccess, setShowSuccess] = useState(false); // Indicates if the popup shows a success message
+  const [isError, setIsError] = useState(false); // Indicates if the popup shows an error message
   const [popupMessage, setPopupMessage] = useState(
     "Are you sure you want to submit your information?"
-  );
+  ); // The message to be displayed in the popup
 
-  // Character limit
+  // Loading spinner state
+  const [loading, setLoading] = useState(false); // Indicates if a loading spinner should be shown
+
+  // Maximum allowed length for username and password
   const MAX_LENGTH = 15;
 
-  // Sanitize input to remove spaces and enforce max length
+  /**
+   * Sanitizes the input value by removing spaces and enforcing the maximum length.
+   * @param {string} value - The input value to sanitize.
+   * @returns {string} - The sanitized input value.
+   */
   const sanitizeInput = (value) => value.replace(/\s/g, "").slice(0, MAX_LENGTH);
 
-  // Validation function
+  /**
+   * Validates the user input fields and returns an error message if validation fails.
+   * @returns {string} - Error message if validation fails, otherwise an empty string.
+   */
   const validateInputs = () => {
     if (!username) return "Username is required.";
     if (username.length > MAX_LENGTH) return "Username exceeds 15 characters.";
@@ -38,82 +49,133 @@ export const useRegistration2Logic = () => {
     return ""; // No errors
   };
 
-  const handleSave = () => {
+  /**
+   * Handles the "Save" button click event.
+   * Validates inputs and updates session storage with the entered data.
+   */
+  const handleSaveClick = () => {
     const error = validateInputs(); // Validate inputs
-    setErrorMessage(error); // Update error message
-    return !error; // Return true if no error
+    setErrorMessage(error); // Display any validation errors
+    if (!error) {
+      const userData = getFromSessionStorage("registrationData"); // Retrieve existing registration data
+      const finalUserData = {
+        ...userData,
+        userName: username,
+        password,
+      };
+      saveToSessionStorage("registrationData", finalUserData); // Save the final user data to session storage
+      console.log("Final User Data Saved to SessionStorage: ", finalUserData); // Debugging log
+      openPopup(); // Open the confirmation popup
+    }
   };
 
-  // Toggle visibility functions
+  // Toggles the visibility of the password field
   const togglePasswordVisibility = () => {
     setIsPasswordVisible((prev) => !prev);
   };
 
+  // Toggles the visibility of the confirm password field
   const toggleConfirmPasswordVisibility = () => {
     setIsConfirmPasswordVisible((prev) => !prev);
   };
 
-  // Popup controls
+  // Opens the confirmation popup
   const openPopup = () => setIsOpen(true);
-  const closePopup = () => {
+
+  /**
+   * Closes the popup and resets its state to default values.
+   */
+  const handlePopupClose = () => {
     setIsOpen(false);
     setShowSuccess(false);
-    setIsError(false); // Reset error flag
+    setIsError(false); // Clear any error flags
     setPopupMessage("Are you sure you want to submit your information?");
   };
 
-  const confirmPopup = async (userData) => {
-    await registerUser(userData); // Make the POST API call
+  /**
+   * Cleans localSession and goes back to the first page.
+   */
+  const handleBackToHome = () => {
+    clearSessionStorage("registrationData"); // Clear stored data
+    navigate("/"); // Navigate to home page
   };
 
-// API Call Function
-const registerUser = async (userData) => {
-  try {
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(userData),
-    });
-
-    const data = await response.json();
-
-    // Handle status codes
-    if (response.status === 200) {
-      setShowSuccess(true);
-      setPopupMessage("You have registered successfully! Wait for admin approval");
-    } else {
-      setIsError(true); // Trigger error popup
-      setPopupMessage(data.message || "An unexpected error occurred.");
-      setIsOpen(true);
+  /**
+   * Handles the confirmation of the popup by sending the data to the backend.
+   */
+  const handlePopupConfirm = async () => {
+    setLoading(true); // Start loading spinner
+    try {
+      const userData = getFromSessionStorage("registrationData"); // Retrieve registration data from session
+      const payload = {
+        gender: userData.gender,
+        age: parseInt(userData.age, 10),
+        height: parseFloat(userData.height),
+        weight: parseFloat(userData.weight),
+        userName: userData.userName,
+        password: userData.password,
+      };
+      console.log("Payload Sent to Backend: ", payload); // Debugging log
+      await registerUser(payload); // Send the data to the backend
+    } catch (error) {
+      console.error("Failed to confirm popup:", error); // Log errors
+    } finally {
+      setLoading(false); // Stop the spinner regardless of the outcome
     }
-  } catch (error) {
-    setIsError(true);
-    setPopupMessage("Error: Network connection failed.");
-    setIsOpen(true);
-  }
-};
+  };
+
+  /**
+   * Sends a POST request to the backend API to register the user.
+   * @param {Object} userData - The payload containing user registration data.
+   */
+  const registerUser = async (userData) => {
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(userData),
+      });
+
+      const data = await response.json();
+
+      // Handle API response status
+      if (response.status === 200) {
+        setShowSuccess(true);
+        setPopupMessage("You have registered successfully! Wait for admin approval");
+      } else {
+        setIsError(true); // Show error message
+        setPopupMessage(data.message || "An unexpected error occurred.");
+        setIsOpen(true); // Open the error popup
+      }
+    } catch (error) {
+      setIsError(true);
+      setPopupMessage("Error: Network connection failed.");
+      setIsOpen(true); // Open the error popup
+    }
+  };
 
   return {
     username,
-    setUsername: (val) => setUsername(sanitizeInput(val)),
+    setUsername: (val) => setUsername(sanitizeInput(val)), // Sanitized setter for username
     password,
-    setPassword: (val) => setPassword(sanitizeInput(val)),
+    setPassword: (val) => setPassword(sanitizeInput(val)), // Sanitized setter for password
     confirmPassword,
-    setConfirmPassword: (val) => setConfirmPassword(sanitizeInput(val)),
+    setConfirmPassword: (val) => setConfirmPassword(sanitizeInput(val)), // Sanitized setter for confirmPassword
     isPasswordVisible,
     togglePasswordVisibility,
     isConfirmPasswordVisible,
     toggleConfirmPasswordVisibility,
     errorMessage,
-    handleSave,
+    handleSaveClick,
     isOpen,
     showSuccess,
     popupMessage,
-    isError, // Expose error state
-    openPopup,
-    closePopup,
-    confirmPopup,
+    isError,
+    handlePopupClose,
+    handlePopupConfirm,
+    handleBackToHome,
+    loading,
   };
 };

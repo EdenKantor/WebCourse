@@ -1,19 +1,21 @@
 import {getRandomQuote } from '../../lib/QuotesDB';
 
+/**
+ * Receives the user's request and processes it based on the preferred method.
+ */
 export default async function handler(req, res) {
     setCorsHeaders(res);
 
     if (req.method === 'OPTIONS') {
         return res.status(200).end();
     }
-
+    //handle GET request
     if (!isGetMethod(req)) {
         return res.status(405).json({ message: 'Method not allowed' });
     }
 
     
     try {
-        // Connect to the database and retrieve the quote
         const quote = await getRandomQuote();
         if (!quote) {
             return res.status(404).json({ message: 'failed to get quote' });

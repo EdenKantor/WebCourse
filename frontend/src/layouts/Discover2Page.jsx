@@ -1,56 +1,53 @@
-import { useEffect} from "preact/hooks"; 
+import { useEffect } from "preact/hooks";
 import Title from "../components/Title";
 import Subtitle from "../components/Subtitle";
-import VideoContainer from "../components/VideoContainer"; 
-import { signedUserData } from "./LoginPage"; // Import username from login page
-import { bodyAreaChoice}from "./Discover1Page";
+import VideoContainer from "../components/VideoContainer";
 import { useDiscover2PageLogic } from "../utils/Discover2PageLogic";
 import DropdownMenu from "../components/DropdownMenu";
-
+import Message from "../components/Message";
+import LoadingSpinner from "../components/LoadingSpinner";
 
 const Discover2Page = () => {
-  const { 
-    workouts ,
-    likeArray , 
-    fetchBodyPartVideos,
+  const {
+    workouts,
+    likeArray,
     handleLike,
     selectedSortParam,
     setSelectedSort,
-    fetchSortedVideos,
-  } = useDiscover2PageLogic(); // Get workouts from logic
+    errorMessage,
+    loading,
+    userName,
+    bodyArea,
+    loadUserData,
+    isSorting,
+    changeVideosOrderAfterSort,
+  } = useDiscover2PageLogic();
 
-  let firstTimeInPage = true;
-  // Fetch the exercise by body part info when the page loads the first time
+  // Fetch user data when the user's name or selected body area changes.
   useEffect(() => {
-    const loadUserData = async () => {
-      if (signedUserData && signedUserData.userName && firstTimeInPage) {
-        await fetchBodyPartVideos(signedUserData.userName,bodyAreaChoice.bodyArea); 
-        firstTimeInPage=false;
-      }
-    };
-    loadUserData(); // Fetch user data
-  }, []);
+    loadUserData();
+  }, [userName, bodyArea]);
 
-  
-  // After sort choice fetch again videos by the sorted choice
+  // Update the order of videos when the sort parameter changes.  
   useEffect(() => {
-      const changeVideosOrderAfterSort = async () => {
-        if (selectedSortParam!= "- Sort by -") { // Ensure it runs only when an option is picked
-        await fetchSortedVideos();
-      };
-    }
     changeVideosOrderAfterSort();
-
   }, [selectedSortParam]);
-
+  
+  // Display a loading spinner if the data is still being fetched.
+  if (loading) {
+    return <LoadingSpinner />;
+  }
 
   return (
     <div className="bg-white text-black dark:bg-gray-900 dark:text-white transition-all duration-300 min-h-screen">
       <div className="flex flex-col items-center min-h-screen space-y-8 p-6">
-        <Title text={`Our ${bodyAreaChoice.bodyArea} Exercises`} />
-        <Subtitle text={`Discover all our exercises to train ${bodyAreaChoice.bodyArea}! `} />
+        <Title text={`Our ${bodyArea} Exercises`} />
+        <Subtitle text={`Discover all our exercises to train ${bodyArea}!`} />
 
-        {/* Dropdown Menu */}
+        {/* Display Error Message */}
+        {errorMessage && <Message message={errorMessage} type="error" />}
+
+        {/* Dropdown Menu for Sorting Options */}
         <div className="w-full max-w-4xl flex justify-center">
           <DropdownMenu
             options={[
@@ -62,10 +59,17 @@ const Discover2Page = () => {
               "Least Difficult",
             ]}
             selected={selectedSortParam}
-            onSelect={setSelectedSort}
+            onSelect={(value) => {
+              setSelectedSort(value);// Update selected sorting parameter.
+            }}
+            disabled={!!errorMessage} // Disable when errorMessage is active
           />
         </div>
-        {/* Workout Cards */}
+
+        {/* Sorting Spinner */}
+        {isSorting && <LoadingSpinner />}
+
+        {/* Workout Cards by selected body area */}
         <div className="space-y-8 w-full max-w-4xl">
           {workouts.map((workout, index) => (
             <VideoContainer
@@ -74,7 +78,7 @@ const Discover2Page = () => {
               videoUrl={workout.url}
               category={workout.bodyPart}
               level={workout.difficulty}
-              numOfLikes = {workout.likeCount}
+              numOfLikes={workout.likeCount}
               liked={likeArray[index]}
               onLike={handleLike}
             />

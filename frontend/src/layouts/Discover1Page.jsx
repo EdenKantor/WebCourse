@@ -1,77 +1,69 @@
-import { useLocation } from 'wouter'; // Replaced react-router-dom with Wouter
+import { useLocation } from 'wouter'; 
 import Title from "../components/Title";
 import Subtitle from "../components/Subtitle";
 import ActionButton from "../components/ActionButton";
-
-let bodyAreaChoice = {};
+import { useDiscover1PageLogic } from "../utils/Discover1PageLogic";
 
 const Discover1Page = () => {
-  const [, navigate] = useLocation(); // Updated to use Wouter's navigation
+  const {
+    handleBodyAreaChoice
+  } = useDiscover1PageLogic();
 
-  const handleBodyAreaChoice = (bodyArea) => {
-    bodyAreaChoice = {
-        bodyArea: bodyArea,
-    };
-    console.log("The bodypart is: ", bodyAreaChoice.bodyArea);
-    navigate('/discover2');
-  }
+  const [, navigate] = useLocation(); // Hook for navigation 
+
   return (
     <div className="bg-white text-black dark:bg-gray-900 dark:text-white transition-all duration-300 min-h-screen">
-      {/* Main Content */}
+
       <div className="flex flex-col items-center min-h-screen space-y-8 p-6">
-        {/* Title */}
+
         <Title text="Discover Workouts" />
 
-        {/* Subtitle */}
         <Subtitle text="Explore categories and focus your training on specific areas!" />
 
         {/* Button Grid Section */}
         <div className="grid grid-cols-3 gap-6 w-full max-w-lg mt-6">
-          {/* Hands */}
+           {/* Responsive grid layout for action buttons. 
+              Clicking on a button will display videos focused on the
+               selected body area. */}
           <ActionButton
             label="Hands"
             iconClass="fas fa-hand-paper"
-            onClick={() => handleBodyAreaChoice("Hands")}
+            onClick={() => handleBodyAreaChoice("Hands",navigate)}
             className="p-6 bg-green-400 text-white rounded-lg hover:bg-green-500 flex flex-col justify-center items-center shadow-lg text-lg"
           />
 
-          {/* Chest */}
           <ActionButton
             label="Chest"
             iconClass="fas fa-heart"
-            onClick={() => handleBodyAreaChoice("Chest")}
+            onClick={() => handleBodyAreaChoice("Chest",navigate)}
             className="p-6 bg-green-400 text-white rounded-lg hover:bg-green-500 flex flex-col justify-center items-center shadow-lg text-lg"
           />
 
-          {/* Shoulders */}
           <ActionButton
             label="Shoulders"
             iconClass="fas fa-arrows-alt-v"
-            onClick={() => handleBodyAreaChoice("Shoulders")}
+            onClick={() => handleBodyAreaChoice("Shoulders",navigate)}
             className="p-6 bg-green-400 text-white rounded-lg hover:bg-green-500 flex flex-col justify-center items-center shadow-lg text-lg"
           />
 
-          {/* Legs */}
           <ActionButton
             label="Legs"
             iconClass="fas fa-running"
-            onClick={() => handleBodyAreaChoice("Legs")}
+            onClick={() => handleBodyAreaChoice("Legs",navigate)}
             className="p-6 bg-green-400 text-white rounded-lg hover:bg-green-500 flex flex-col justify-center items-center shadow-lg text-lg"
           />
 
-          {/* Stomach */}
           <ActionButton
             label="Stomach"
             iconClass="fas fa-dna"
-            onClick={() => handleBodyAreaChoice("Stomach")}
+            onClick={() => handleBodyAreaChoice("Stomach",navigate)}
             className="p-6 bg-green-400 text-white rounded-lg hover:bg-green-500 flex flex-col justify-center items-center shadow-lg text-lg"
           />
 
-          {/* Full Body */}
           <ActionButton
             label="Full Body"
             iconClass="fas fa-dumbbell"
-            onClick={() => handleBodyAreaChoice("Full Body")}
+            onClick={() => handleBodyAreaChoice("Full Body",navigate)}
             className="p-6 bg-green-400 text-white rounded-lg hover:bg-green-500 flex flex-col justify-center items-center shadow-lg text-lg"
           />
         </div>
@@ -79,5 +71,5 @@ const Discover1Page = () => {
     </div>
   );
 };
-export { bodyAreaChoice };
+
 export default Discover1Page;

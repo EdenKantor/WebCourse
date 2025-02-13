@@ -1,9 +1,9 @@
-import { useLocation } from 'wouter'; // Lightweight routing for Preact
+import { useLocation } from 'wouter'; 
 import Logo from '../components/Logo';
 import ActionButton from '../components/ActionButton'; 
 
 const FirstPage = () => {
-  const [, navigate] = useLocation(); // Get navigation function
+  const [, navigate] = useLocation(); 
 
   return (
     <div className="bg-white text-black dark:bg-gray-900 dark:text-white transition-all duration-300 min-h-screen">

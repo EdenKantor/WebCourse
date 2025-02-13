@@ -1,100 +1,98 @@
-import { useInfoPageLogic } from "../utils/InfoPageLogic"; 
-import { useEffect, useState } from "preact/hooks"; 
+import { useInfoPageLogic } from "../utils/InfoPageLogic";
+import { useEffect, useState } from "preact/hooks";
 import Title from "../components/Title";
 import Subtitle from "../components/Subtitle";
 import FormField from "../components/FormField";
 import ActionButton from "../components/ActionButton";
 import Message from "../components/Message";
-import LoadingSpinner from "../components/LoadingSpinner"; 
-import { signedUserData } from "./LoginPage"; // Import username from login page
+import LoadingSpinner from "../components/LoadingSpinner";
 
 const InfoPage = () => {
-  // Import logic hooks from InfoPageLogic
   const {
-    age,
-    setAge,
-    height,
-    setHeight,
-    weight,
-    setWeight,
-    bmi,
-    errorMessage,
-    successMessage,
-    handleUpdate, 
-    fetchUserInfo, 
+    userName, // The user's name retrieved from logic
+    age, // User's current age
+    setAge, // Function to update age
+    height, // User's current height
+    setHeight, // Function to update height
+    weight, // User's current weight
+    setWeight, // Function to update weight
+    bmi, // Calculated Body Mass Index (BMI)
+    errorMessage, // Error messages to display to the user
+    successMessage, // Success messages to display to the user
+    handleUpdateClick, // Function to handle the update button click
+    fetchInitialData, // Function to fetch initial user data
+    completedSessions, // Number of completed workout sessions
+    openedSessions, // Number of opened workout sessions
+    loading, // Loading state for initial data fetch
+    updating, // Loading state for the update process
   } = useInfoPageLogic();
 
-  // Loading states
-  const [loading, setLoading] = useState(true); // Initial spinner
-  const [updating, setUpdating] = useState(false); // Update spinner
-
-  // Fetch user info when the page loads
+  // Fetch user data when the page loads
   useEffect(() => {
-    const loadUserData = async () => {
-      if (signedUserData && signedUserData.userName) {
-        await fetchUserInfo(signedUserData.userName); 
-        setLoading(false); // Turn off loading spinner
-      }
-    };
-    loadUserData(); // Fetch user data
+    fetchInitialData();
   }, []);
 
-  // Handle Update Click
-  const handleUpdateClick = async () => {
-    setUpdating(true); // Show spinner while updating
-    await handleUpdate(signedUserData.userName); // Update data
-    setUpdating(false); // Turn off spinner
-  };
-
-  // Show loading spinner if fetching data
+  // Show loading spinner if data is still loading
   if (loading) {
-    return <LoadingSpinner />; 
+    return <LoadingSpinner />;
   }
 
   return (
     <div className="bg-white text-black dark:bg-gray-900 dark:text-white transition-all duration-300 min-h-screen">
       <div className="flex flex-col items-center min-h-screen space-y-8 p-6">
-        <Title text={`${signedUserData.userName}'s Personal Information`} />
-
+        {/* Page title with the user's name */}
+        <Title text={`${userName}'s Personal Information`} />
+        {/* Subtitle providing context for the user */}
         <Subtitle text="View your BMI and personal data here. You can update your age, height, and weight as needed!" />
+
+        {/* Display the user's BMI */}
         <p className="text-xl text-center text-green-500 font-semibold">
           Your BMI: <span className="text-3xl">{bmi}</span>
         </p>
 
+        {/* User session statistics */}
+        <div className="w-full max-w-sm space-y-2 text-center">
+          <Subtitle text={`Completed Sessions: ${completedSessions}`} className="text-blue-500 text-lg" />
+          <Subtitle text={`Opened Sessions: ${openedSessions}`} className="text-blue-500 text-lg" />
+        </div>
+
+        {/* Form fields for user information input */}
         <div className="w-full max-w-sm space-y-4">
           <FormField
             label="Age"
             placeholder="Enter your age"
             type="number"
-            value={age}
-            onChange={(e) => setAge(e.target.value)}
+            value={age} // Current age value
+            onChange={(e) => setAge(e.target.value)} // Update age state on input change
           />
           <FormField
             label="Height (cm)"
             placeholder="Enter your height"
             type="number"
-            value={height}
-            onChange={(e) => setHeight(e.target.value)}
+            value={height} // Current height value
+            onChange={(e) => setHeight(e.target.value)} // Update height state on input change
           />
           <FormField
             label="Weight (kg)"
             placeholder="Enter your weight"
             type="number"
-            value={weight}
-            onChange={(e) => setWeight(e.target.value)}
+            value={weight} // Current weight value
+            onChange={(e) => setWeight(e.target.value)} // Update weight state on input change
           />
         </div>
 
-        <Message message={errorMessage} />
-        <Message message={successMessage} type="success" />
+        {/* Display error or success messages */}
+        <Message message={errorMessage} /> {/* Error messages */}
+        <Message message={successMessage} type="success" /> {/* Success messages */}
 
+        {/* Update button or spinner during update */}
         {updating ? (
-          <LoadingSpinner /> 
+          <LoadingSpinner /> // Show spinner while updating
         ) : (
           <ActionButton
             label="Update"
             iconClass="fas fa-save"
-            onClick={handleUpdateClick}
+            onClick={handleUpdateClick} // Trigger update function
             className="px-6 py-2 bg-green-400 hover:bg-green-500 text-white rounded-lg"
           />
         )}

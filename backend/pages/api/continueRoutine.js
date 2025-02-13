@@ -5,7 +5,7 @@ import {getUniqueVideos, checkVideoByUrl, changeLikeCount} from '../../lib/Video
 import {checkURLForUser, addURLForUser, removeURLForUser} from '../../lib/UsersLikeDB'
 
 /**
- * Rececive the user request with method he prefer to do 
+ * Receives the user's request and processes it based on the preferred method.
  */
 export default async function handler(req, res) {
     setCorsHeaders(res);
@@ -24,10 +24,8 @@ export default async function handler(req, res) {
 
 
 /**
- * Handle GET request.
- * 
- * @param {Object} req
- * @param {Object} res
+ * Handles GET requests based on the 'action' query parameter.
+ *
  */
 async function handleGETRequest(req, res) {
     const { action } = req.query; 
@@ -50,11 +48,9 @@ async function handleGETRequest(req, res) {
 }
 
 
-/** 
- * Handle PATCH request and continue to classify requeset
- * by user action variable
- * 
-*/
+/**
+ * Handles PATCH requests based on the 'action' body parameter.
+ */
 async function handlePATCHRequest(req, res) {
     const { action } = req.body; 
     if (!action) {
@@ -74,6 +70,9 @@ async function handlePATCHRequest(req, res) {
 }
 
 
+/**
+ * By getting userName retrieves session data JSON for a user.
+ */
 async function getInitalUserSessionData(req, res) {
     try {
         const { userName } = req.query;
@@ -106,9 +105,6 @@ async function getInitalUserSessionData(req, res) {
 /**
  * get userName and the boolean array represent the checks the user
  * have checked a exercise he has done
- * @param {*} req 
- * @param {*} res 
- * @returns the number of checks of done the user did
  */
 async function getDoneVideoArray(req, res) {
     try {
@@ -144,11 +140,7 @@ async function getDoneVideoArray(req, res) {
 }
 
 /**
- * Retrieves the most recent session data for a user.
- * If the session is complete, it initializes a new session with updated challenges.
- * 
- * @param {string} userName - The username for the session.
- * @returns {Object|null} The session details or null if an error occurs.
+ * Retrieves session data for a user, initializing a new session if necessary.
  */
 async function getRelevantData(userName) {
     try {
@@ -182,9 +174,6 @@ async function getRelevantData(userName) {
 
 /**
  * Retrieves detailed video information for a given list of video URLs.
- * 
- * @param {Array<string>} videos - Array of video's URL's.
- * @returns {Array<Object>} Array of video's JSON object from Videos collection.
  */
 async function getVideos(videos) {
     try {
@@ -207,11 +196,7 @@ async function getVideos(videos) {
 
 
 /**
- * Retrieves like statuses for the user's videos in session.
- * 
- * @param {string} userName - The username.
- * @param {Array<string>} videos - Array of video URLs.
- * @returns {Array<boolean>} Array indicating if the user liked the videos in his session before.
+ * Retrieves like statuses for the user's videos in his session.
  */
 async function getLikes(userName, videos) {
     try {
@@ -230,9 +215,6 @@ async function getLikes(userName, videos) {
 /**
  * get userName, url of exercise, and boolean which indicates
  * if the like action is like (true) or unlike(false)
- * @param {*} req 
- * @param {*} res 
- * @returns message that the update has complete
  */
 async function patchLikes(req, res) {
     try {
@@ -262,7 +244,10 @@ async function patchLikes(req, res) {
     }
 }
 
-
+/**
+ * get userName, index of the exercise in the videos array, and boolean which indicates
+ * if the done action is pressed (true) or not(false)
+ */
 async function patchDone(req, res) {
     try {
     const { userName, index, doneAction } = req.body;
@@ -284,7 +269,7 @@ async function patchDone(req, res) {
 // Function to set CORS headers
 function setCorsHeaders(res) {
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, PATCH, OPTIONS');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, PATCH, DELETE, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 }
 

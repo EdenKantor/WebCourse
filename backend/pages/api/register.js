@@ -2,20 +2,21 @@ import { getUserByUsername, addNewUser, deleteUser } from '../../lib/UsersDB';
 import { createNewUserLike } from '../../lib/UsersLikeDB';
 import { createUserSession } from '../../lib/UserSessionsDB';
 
-
+/**
+ * Receives the user's request and processes it based on the preferred method.
+ */
 export default async function handler(req, res) {
     setCorsHeaders(res);
     if (req.method === 'OPTIONS') {
         return res.status(200).end();
     }
-
+    //Handles POST request
     if (!isPostMethod(req)) {
         return res.status(405).json({ message: 'Method not allowed' });
     }
 
     const { userName, age, gender, height, password, weight } = req.body;
 
-    // Validate that all fields are provided
     if (!userName || !age || !gender || !height || !password || !weight) {
         return res.status(400).json({ message: 'All fields are required' });
     }
@@ -28,8 +29,6 @@ export default async function handler(req, res) {
         }
 
         // Add new user
-        // hash the password before sending it to addNewUser
-
         const result = await addNewUser(userName, age, gender, height, password, weight);
         if (result.acknowledged) {
             const resultOfUserLike = await createNewUserLike(userName);

@@ -1,13 +1,31 @@
 import { useState } from "preact/hooks";
 
+const apiUrl = "https://web-fit-pro-back-rose.vercel.app/api/pendingUsers";
+
+/**
+ * Provides state management and core functionality for:
+ * - Fetching pending users
+ * - Approving users
+ * - Sorting pending users list
+ */
 export const usePendingUsersLogic = () => {
+    /**
+     * Key state variables:
+     * - pendingUsers: Current list of pending users
+     * - originalPendingUsers: Backup of initial user list for reverting sorting
+     * - sortMode: Manages current sorting state ('by Creation' or 'alphabetical')
+     * - loading: loading state during initial data fetching. 
+     */
     const [pendingUsers, setPendingUsers] = useState([]);
     const [originalPendingUsers, setOriginalPendingUsers] = useState([]); // Save the original list
-    const [isSorted, setIsSorted] = useState(false); // Whether the table is currently sorted
+    const [sortMode, setSortMode] = useState('default');
+    const [loading, setLoading] = useState(true);
 
+    // Fetches pending users from the data base
     const fetchPendingUsers = async () => {
         try {
-            const response = await fetch("http://localhost:3000/api/pendingUsers", {
+            setLoading(true);
+            const response = await fetch("https://web-fit-pro-back-rose.vercel.app/api/pendingUsers", {
                 method: "GET",
             });
             const data = await response.json();
@@ -18,23 +36,33 @@ export const usePendingUsersLogic = () => {
             setPendingUsers([]);
             setOriginalPendingUsers([]);
         }
+        finally {
+            setLoading(false);
+        }
     };
 
+    // Approves a pending user moving them to active status
     const approveUser = async (userName) => {
         try {
-            await fetch(`http://localhost:3000/api/pendingUsers?username=${userName}`, {
-                method: "PUT",
+            const response = await fetch(apiUrl, {
+                method: "PATCH",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  username: userName,
+                }),
             });
-            setPendingUsers((prevUsers) =>
-                prevUsers.filter((user) => user.userName !== userName)
-            );
-            setOriginalPendingUsers((prevOriginal) =>
-                prevOriginal.filter((user) => user.userName !== userName)
-            );
-            return true;
+            if(response.ok){
+                setPendingUsers((prevUsers) =>
+                    prevUsers.filter((user) => user.userName !== userName)
+                );
+                setOriginalPendingUsers((prevOriginal) =>
+                    prevOriginal.filter((user) => user.userName !== userName)
+                );
+            }
         } catch (error) {
             console.error("Error approving user:", error);
-            return false;
         }
     };
 
@@ -44,19 +72,24 @@ export const usePendingUsersLogic = () => {
         );
     };
 
+    // Sorts users alphabetically or by Creation (default)
     const sortUsersByName = () => {
-        if (isSorted) {
-            setPendingUsers([...originalPendingUsers]); // Reset to the unsorted state
-            setIsSorted(false);
-        } else {
-            const sortedUsers = sortUsers(pendingUsers); // Sort in ascending order
-            setPendingUsers(sortedUsers);
-            setIsSorted(true);
-        }
+        setSortMode(prevMode => {
+            if (prevMode === 'default') {
+                const sortedUsers = sortUsers(pendingUsers);
+                setPendingUsers(sortedUsers);
+                return 'alphabetical';
+            } else {
+                setPendingUsers([...originalPendingUsers]);
+                return 'default';
+            }
+        });
     };
 
     return {
         pendingUsers,
+        sortMode,
+        loading,
         fetchPendingUsers,
         approveUser,
         sortUsersByName,

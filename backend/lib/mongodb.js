@@ -1,54 +1,55 @@
 import mongoose from 'mongoose';
 import { MongoClient } from 'mongodb';
 
-let mongoClient = null;
-let isMongoClientConnected = false;
+let globalMongooseConnection = null;
+let globalMongoClient = null;
 
-const client = new MongoClient(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
-
-export const connectToDatabase = async () => {
+const connectToDatabase = async () => {
+  // Determine whether to use Mongoose or MongoClient based on an environment variable.
   const useMongoose = process.env.USE_MONGOOSE === 'true';
 
   if (useMongoose) {
-    // Use Mongoose connection
-    if (mongoose.connection.readyState === 1) {
-      console.log('Mongoose already connected');
-      return { db: mongoose.connection.db }; // Return the database object for Mongoose
+  // Check if a Mongoose connection already exists and is ready.
+    if (globalMongooseConnection && globalMongooseConnection.readyState === 1) {
+      console.log('Mongoose already connected (global)');
+      return { db: globalMongooseConnection.db };
     }
 
     try {
-      await mongoose.connect(process.env.MONGO_URI, {
+      // Establish a new Mongoose connection if not already connected.  
+      globalMongooseConnection = await mongoose.connect(process.env.MONGO_URI, {
         useNewUrlParser: true,
         useUnifiedTopology: true,
       });
-      console.log('Connected to MongoDB via Mongoose');
-      return { db: mongoose.connection.db }; // Return the database object
+      console.log('Connected to MongoDB via Mongoose (global)');
+      return { db: globalMongooseConnection.connection.db };
     } catch (error) {
+      // Handle connection errors for Mongoose.
       console.error('Error connecting to MongoDB via Mongoose:', error);
       throw new Error('Mongoose connection failed');
     }
   } else {
-    // Use native MongoClient
-    if (isMongoClientConnected) {
-      console.log('MongoClient already connected');
-      return { db: mongoClient.db(process.env.MONGO_DB_NAME) };
+    // Check if a MongoClient connection already exists and is connected.    
+    if (globalMongoClient && globalMongoClient.isConnected()) {
+      console.log('MongoClient already connected (global)');
+      return { db: globalMongoClient.db(process.env.MONGO_DB_NAME) };
     }
 
     try {
-      await client.connect();
-      mongoClient = client;
-      isMongoClientConnected = true;
-      console.log('Connected to MongoDB via MongoClient');
-      return { db: mongoClient.db(process.env.MONGO_DB_NAME) };
+      // Establish a new MongoClient connection if not already connected.      
+      globalMongoClient = new MongoClient(process.env.MONGO_URI, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+      });
+      await globalMongoClient.connect();
+      console.log('Connected to MongoDB via MongoClient (global)');
+      return { db: globalMongoClient.db(process.env.MONGO_DB_NAME) };
     } catch (error) {
+      // Handle connection errors for MongoClient.
       console.error('Error connecting to MongoDB via MongoClient:', error);
       throw new Error('MongoClient connection failed');
     }
   }
 };
 
-// Properly export the function
 export default connectToDatabase;

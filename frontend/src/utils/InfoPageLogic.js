@@ -1,18 +1,35 @@
 import { useState } from "preact/hooks";
+import { getFromSessionStorage } from "../utils/LocalSessionHelper";
 
 // API URL
-const apiUrl = "http://localhost:3000/api/myInfo"; 
+const apiUrl = "https://web-fit-pro-back-rose.vercel.app/api/myInfo";
 
 export const useInfoPageLogic = () => {
-  // States for data
+  // States for user data
   const [age, setAge] = useState("");
   const [height, setHeight] = useState("");
   const [weight, setWeight] = useState("");
   const [bmi, setBmi] = useState("");
+  const [completedSessions, setCompletedSessions] = useState(0);
+  const [openedSessions, setOpenedSessions] = useState(0);
+
+  // States for feedback messages
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
-  // Calculate BMI
+  // Loading states
+  const [loading, setLoading] = useState(true); // Initial loading
+  const [updating, setUpdating] = useState(false); // While updating data
+
+  // Retrieve username from session storage
+  const userData = getFromSessionStorage("signedUserData");
+  const userName = userData?.userName || "Guest"; // Default to "Guest" if no data found
+
+  /**
+   * Calculates the BMI and updates the state.
+   * @param {number} height - Height in centimeters.
+   * @param {number} weight - Weight in kilograms.
+   */
   const calculateBMI = (height, weight) => {
     if (height && weight) {
       const bmiValue = (weight / ((height / 100) ** 2)).toFixed(1);
@@ -20,23 +37,22 @@ export const useInfoPageLogic = () => {
     }
   };
 
-  // Fetch user info from backend
-  const fetchUserInfo = async (userName) => {
+  /**
+   * Fetches user information from the backend.
+   */
+  const fetchUserInfo = async () => {
     try {
-      const response = await fetch(`${apiUrl}?userName=${userName}`, {
+      const response = await fetch(`${apiUrl}?userName=${userName}&action=getUserData`, {
         method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
       });
-
       const data = await response.json();
 
       if (response.ok) {
         setAge(data.user.age);
         setHeight(data.user.height);
         setWeight(data.user.weight);
-        calculateBMI(data.user.height, data.user.weight); 
+        calculateBMI(data.user.height, data.user.weight);
       } else {
         setErrorMessage(data.message || "Failed to fetch user data.");
       }
@@ -45,31 +61,46 @@ export const useInfoPageLogic = () => {
     }
   };
 
-  // Validate inputs
-  const validateInputs = () => {
-    if (!age || age <= 0) return "Please enter a valid age.";
-    if (!height || height <= 0) return "Please enter a valid height.";
-    if (!weight || weight <= 0) return "Please enter a valid weight.";
-    return "";
+  /**
+   * Fetches user session data from the backend.
+   */
+  const fetchUserSessionsInfo = async () => {
+    try {
+      const response = await fetch(`${apiUrl}?userName=${userName}&action=getUserSessionsData`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
+      const data = await response.json();
+
+      if (response.ok) {
+        setCompletedSessions(data.user.completesessions);
+        setOpenedSessions(data.user.openedsessions);
+      } else {
+        setErrorMessage(data.message || "Failed to fetch user sessions data.");
+      }
+    } catch (error) {
+      setErrorMessage("Error: Network connection failed.");
+    }
   };
 
-  // Update user details
-  const handleUpdate = async (userName) => {
+  /**
+   * Handles user data update and validation.
+   */
+  const handleUpdateClick = async () => {
     const error = validateInputs();
     if (error) {
       setErrorMessage(error);
       setSuccessMessage("");
-      return; // Stop if validation fails
+      return;
     }
 
+    setUpdating(true);
     try {
       const response = await fetch(apiUrl, {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          userName: userName,
+          userName,
           age: parseInt(age),
           height: parseInt(height),
           weight: parseInt(weight),
@@ -81,18 +112,39 @@ export const useInfoPageLogic = () => {
       if (response.ok) {
         setSuccessMessage("Details updated successfully!");
         setErrorMessage("");
-        calculateBMI(height, weight); // Recalculate BMI
+        calculateBMI(height, weight);
       } else {
         setErrorMessage(data.message || "Failed to update details.");
-        setSuccessMessage("");
       }
     } catch (error) {
       setErrorMessage("Network error. Please try again later.");
-      setSuccessMessage("");
+    } finally {
+      setUpdating(false);
     }
   };
 
+  /**
+   * Validates user inputs.
+   * @returns {string} - Error message if validation fails, otherwise empty string.
+   */
+  const validateInputs = () => {
+    if (!age || age <= 0) return "Please enter a valid age.";
+    if (!height || height <= 0) return "Please enter a valid height.";
+    if (!weight || weight <= 0) return "Please enter a valid weight.";
+    return "";
+  };
+
+  /**
+   * Fetches initial data on component mount.
+   */
+  const fetchInitialData = async () => {
+    await fetchUserInfo();
+    await fetchUserSessionsInfo();
+    setLoading(false);
+  };
+
   return {
+    userName,
     age,
     setAge,
     height,
@@ -102,7 +154,11 @@ export const useInfoPageLogic = () => {
     bmi,
     errorMessage,
     successMessage,
-    handleUpdate,
-    fetchUserInfo,
+    completedSessions,
+    openedSessions,
+    handleUpdateClick,
+    fetchInitialData,
+    loading,
+    updating,
   };
 };

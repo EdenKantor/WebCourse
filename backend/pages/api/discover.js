@@ -8,7 +8,9 @@ import {
 
   import {checkURLForUser,addURLForUser,removeURLForUser,} from '../../lib/UsersLikeDB';
   
-
+/**
+ * Receives the user's request and processes it based on the preferred method.
+ */
   export default async function handler(req, res) {
     setCorsHeaders(res);
 
@@ -24,11 +26,8 @@ import {
     }
   }
   
-  /**
- * Handle GET request.
- * 
- * @param {Object} req
- * @param {Object} res
+/**
+ * Handles GET requests based on the 'action' query parameter.
  */
   async function handleGETRequest(req, res) {
     const { action } = req.query;
@@ -53,11 +52,9 @@ import {
     }
   }
   
-  /** 
- * Handle PATCH request and continue to classify requeset
- * by user action variable
- * 
-*/
+/**
+ * Handles PATCH requests based on the 'action' body parameter.
+ */
   async function handlePATCHRequest(req, res) {
     const { action } = req.body;
     if (!action) {
@@ -74,7 +71,11 @@ import {
       return handleError(error, res);
     }
   }
-
+/**
+ * Sorts videos by their titles in either ascending or descending order.
+ * Gets userName, sorting preference (ascending or descending), and bodyPart.
+ * Returns a list of videos sorted by title along with the user's like statuses for the videos.
+ */
   async function sortVideosByTitle(req, res) {
     try {
       const { userName, ascending, bodyPart } = req.query;
@@ -90,7 +91,12 @@ import {
       return handleError(error, res);
     }
   }
-  
+
+/**
+ * Sorts videos by the number of likes in either highest-first or lowest-first order.
+ * Gets userName, sorting preference (highestFirst), and bodyPart.
+ * Returns a list of videos sorted by like count along with the user's like statuses for the videos.
+ */
   async function sortVideosByLikeCount(req, res) {
     try {
       const { userName, highestFirst, bodyPart } = req.query;
@@ -106,6 +112,11 @@ import {
     }
   }
   
+/**
+ * Sorts videos by their difficulty level in either beginner-first or advanced-first order.
+ * Gets userName, sorting preference (beginnerFirst), and bodyPart.
+ * Returns a list of videos sorted by difficulty along with the user's like statuses for the videos.
+ */
   async function sortVideosByDifficulty(req, res) {
     try {
       const { userName, beginnerFirst, bodyPart } = req.query;
@@ -122,6 +133,11 @@ import {
     }
   }
   
+  /**
+ * Filters videos by a specific body part.
+ * Gets userName and bodyPart.
+ * Returns a list of videos related to the bodyPart along with the user's like statuses for the videos.
+ */
   async function filterVideosByBodyPart(req, res) {
     try {
       const { userName, bodyPart } = req.query;
@@ -137,13 +153,12 @@ import {
       return handleError(error, res);
     }
   }
-  /**
-   * Retrieves like statuses for the user's videos in session.
-   * 
-   * @param {string} userName - The username.
-   * @param {Array<string>} videos - Array of video URLs.
-   * @returns {Array<boolean>} Array indicating if the user liked the videos in his session before.
-   */
+
+/**
+ * Gets the user's like statuses for a list of videos.
+ * Gets userName and a list of video URLs.
+ * Returns an array of booleans indicating the user's like status for each video.
+ */
   async function getLikes(userName, videos) {
 
       try {
@@ -157,7 +172,11 @@ import {
       }
   }
   
-  
+  /**
+   * Updates the user's like status for a specific video.
+   * Gets userName, video URL, and likeAction (true for like, false for unlike).
+   * Returns a success message when the update is complete.
+   */
   async function updateVideoLikes(req, res) {
     try {
       const { userName, url, likeAction } = req.body;
